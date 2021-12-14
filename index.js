@@ -2,7 +2,12 @@ let host = "ws://127.0.0.1:3777/api/";
 let username = "";
 let password = "";
 
+// Show statistics with a maximum of items per category
 let maxItems = 5;
+
+// Enabling this option will disable the statistics
+let showMessages = false;
+let messageFilter = ["KL_MESSAGE"];
 
 // Do not change after this line
 let webSocket = require('ws');
@@ -35,6 +40,14 @@ let count = 0;
 
 ws.on('message', function message(data) {
   let json = JSON.parse(data);
+
+  // Dump messages for debugging
+  if (showMessages) {
+    if (messageFilter.length === 0 || messageFilter.indexOf(messageToName(json["Message"])) !== -1) {
+      console.log(data.toString());
+    }
+    return;
+  }
 
   // Increment counter
   count++;
@@ -77,7 +90,7 @@ function update() {
   console.log("Received: " + count.toString() + ", " + Math.round(count / secondsElapsed()).toString() + " msg/s");
   console.log("");
 
-  console.log("Longest Messages:");
+  console.log("Biggest Messages:");
   for(let m of biggestMessages) {
     let j = JSON.parse(m);
     console.log("> Message: " + messageToName(j["Message"]) + ", SenderID: " + j["SenderID"].toString() + ", Length: " + m.length.toString());
