@@ -1,6 +1,26 @@
-let WebSocket = require('ws');
+let host = "ws://127.0.0.1:3777/api/";
+let username = "";
+let password = "";
 
-const ws = new WebSocket('ws://127.0.0.1:3777/api/');
+let maxItems = 5;
+
+// Do not change after this line
+let webSocket = require('ws');
+let fs = require("fs");
+
+let constants = JSON.parse(fs.readFileSync("./constants.json"));
+let conststr = {};
+for (let c of constants) {
+  conststr[c.Value] = c.Name;
+}
+
+let protocols = [];
+
+if (username && password) {
+  protocols.push(encodeURIComponent(btoa(username + ':' + password)));
+}
+
+const ws = new webSocket(host, protocols);
 
 ws.on('open', function open() {
   console.log('Connected...');
@@ -24,7 +44,7 @@ ws.on('message', function message(data) {
   biggestMessages.sort((a, b) => {
     return b.length - a.length;
   });
-  biggestMessages = biggestMessages.slice(0, 5);
+  biggestMessages = biggestMessages.slice(0, maxItems);
   if (!busyMessages[json["Message"]]) {
     busyMessages[json["Message"]] = 0;
   }
@@ -42,6 +62,15 @@ function secondsElapsed() {
   return (new Date().getTime() - startTime) / 1000;
 }
 
+function messageToName(msg) {
+  if (conststr[msg]) {
+    return conststr[msg];
+  }
+  else {
+    return msg.toString();
+  }
+}
+
 function update() {
   process.stdout.write('\033c');
 
@@ -51,7 +80,7 @@ function update() {
   console.log("Longest Messages:");
   for(let m of biggestMessages) {
     let j = JSON.parse(m);
-    console.log("> Message: " + j["Message"].toString() + ", SenderID: " + j["SenderID"].toString() + ", Length: " + m.length.toString());
+    console.log("> Message: " + messageToName(j["Message"]) + ", SenderID: " + j["SenderID"].toString() + ", Length: " + m.length.toString());
   }
   console.log("");
 
@@ -62,10 +91,10 @@ function update() {
   bm.sort((a, b) => {
     return b.Count - a.Count;
   });
-  bm = bm.slice(0, 5);
+  bm = bm.slice(0, maxItems);
   console.log("Busy Messages:");
   for(let x of bm) {
-    console.log("> Message: " + x.Message.toString() + ", Count: " + x.Count.toString());
+    console.log("> Message: " + messageToName(x.Message) + ", Count: " + x.Count.toString());
   }
   console.log("");
 
@@ -76,7 +105,7 @@ function update() {
   bi.sort((a, b) => {
     return b.Count - a.Count;
   });
-  bi = bi.slice(0, 5);
+  bi = bi.slice(0, maxItems);
   console.log("Busy IDs:");
   for(let x of bi) {
     console.log("> SenderID: " + x.SenderID.toString() + ", Count: " + x.Count.toString());
