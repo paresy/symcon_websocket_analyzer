@@ -1,3 +1,7 @@
+# This Project is outdated
+
+Please use this module instead which will give better results: https://community.symcon.de/t/51896
+
 ## IP-Symcon WebSocket Analyzer
 
 ```
